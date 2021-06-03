@@ -1,7 +1,9 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 
-export default function Home() {
+export default function Home({ launches, miner, miners }) {
+  console.log("miner:", miner);
   return (
     <div className={styles.container}>
       <Head>
@@ -10,44 +12,9 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <h1>{miner.id}</h1>
+        <p>owner: {miner.owner.address}</p>
+        <p>worker: {miner.worker.address}</p>
       </main>
 
       <footer className={styles.footer}>
@@ -56,10 +23,61 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
         </a>
       </footer>
     </div>
-  )
+  );
+}
+
+export async function getStaticProps() {
+  const client = new ApolloClient({
+    uri: "https://miner-marketplace-backend.onrender.com/query",
+    cache: new InMemoryCache()
+  });
+  const { data } = await client.query({
+    query: gql`
+      query {
+        miner(id: "f02770") {
+          id
+          claimed
+          location {
+            region
+            country
+          }
+          transparencyScore
+          reputationScore
+          owner {
+            address
+          }
+          worker {
+            address
+          }
+          personalInfo {
+            name
+            bio
+          }
+          pricing {
+            storageAskPrice
+          }
+          service {
+            serviceTypes {
+              storage
+            }
+            dataTransferMechanism {
+              online
+            }
+          }
+        }
+      }
+    `
+  });
+  return {
+    props: {
+      launches: [],
+      miner: data.miner,
+      miners: []
+    }
+  };
 }
