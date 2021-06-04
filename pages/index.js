@@ -1,9 +1,13 @@
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
+import { useRouter } from "next/router";
 
-export default function Home({ launches, miner, miners }) {
-  console.log("miner:", miner);
+export default function Home({ miner }) {
+  // console.log("Miner:", miner);
+  console.log("Miner:", miner);
+  const router = useRouter();
+
   return (
     <div className={styles.container}>
       <Head>
@@ -12,21 +16,16 @@ export default function Home({ launches, miner, miners }) {
       </Head>
 
       <main className={styles.main}>
-        <h1>{miner.id}</h1>
-        <p>owner: {miner.owner.address}</p>
-        <p>worker: {miner.worker.address}</p>
+        <div>
+          {miner.map((miners) => (
+            <a onClick={() => router.push(miners.id)}>
+              <div className={styles.card}>
+                <p>{miners.id}</p>
+              </div>
+            </a>
+          ))}
+        </div>
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
     </div>
   );
 }
@@ -34,50 +33,21 @@ export default function Home({ launches, miner, miners }) {
 export async function getStaticProps() {
   const client = new ApolloClient({
     uri: "https://miner-marketplace-backend.onrender.com/query",
-    cache: new InMemoryCache()
+    cache: new InMemoryCache(),
   });
   const { data } = await client.query({
     query: gql`
       query {
-        miner(id: "f02770") {
+        miners {
           id
           claimed
-          location {
-            region
-            country
-          }
-          transparencyScore
-          reputationScore
-          owner {
-            address
-          }
-          worker {
-            address
-          }
-          personalInfo {
-            name
-            bio
-          }
-          pricing {
-            storageAskPrice
-          }
-          service {
-            serviceTypes {
-              storage
-            }
-            dataTransferMechanism {
-              online
-            }
-          }
         }
       }
-    `
+    `,
   });
   return {
     props: {
-      launches: [],
-      miner: data.miner,
-      miners: []
-    }
+      miner: data.miners,
+    },
   };
 }
